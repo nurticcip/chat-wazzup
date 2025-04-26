@@ -111,12 +111,43 @@ app.register_blueprint(user_bp)
 app.register_blueprint(chat_bp)
 
 # Проверяем БД перед запуском
-@app.before_first_request
-def before_first_request():
-    """Check database tables before first request"""
-    print("Checking database schema before first request...")
-    check_and_update_schema()
-    print("Database schema check complete")
+# Flag to ensure the logic runs only once
+first_request_handled = False
+
+@app.before_request
+def before_request():
+    """Check database tables and ensure default avatar before the first request"""
+    global first_request_handled
+    if not first_request_handled:
+        print("Checking database schema before first request...")
+        check_and_update_schema()
+        print("Database schema check complete")
+        
+        # Ensure default avatar
+        avatar_path = os.path.join(app.static_folder, 'images', 'avatar.png')
+        if not os.path.exists(avatar_path):
+            print(f"Creating default avatar at {avatar_path}")
+            try:
+                # Create directory if it doesn't exist
+                os.makedirs(os.path.dirname(avatar_path), exist_ok=True)
+                
+                # Create a simple placeholder avatar
+                from PIL import Image, ImageDraw
+                img = Image.new('RGB', (200, 200), color=(73, 109, 137))
+                d = ImageDraw.Draw(img)
+                d.ellipse((50, 50, 150, 150), fill=(255, 255, 255))
+                img.save(avatar_path)
+                print(f"Default avatar created at {avatar_path}")
+            except Exception as e:
+                print(f"Failed to create default avatar: {e}")
+                try:
+                    with open(avatar_path, 'wb') as f:
+                        f.write(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n\x0b\xb8\x00\x00\x00\x00IEND\xaeB`\x82')
+                    print(f"Empty default avatar created at {avatar_path}")
+                except:
+                    print("Failed to create empty avatar file")
+        
+        first_request_handled = True
 
 @app.route('/ping')
 def index():
@@ -170,40 +201,6 @@ def user_photo_redirect():
     if 'user_id' not in session:
         return send_file('static/images/avatar.png', mimetype='image/png')
     return redirect('/api/user/photo')
-
-# Обеспечиваем наличие стандартного аватара
-@app.before_first_request
-def ensure_default_avatar():
-    """Проверяет наличие файла аватара по умолчанию"""
-    avatar_path = os.path.join(app.static_folder, 'images', 'avatar.png')
-    if not os.path.exists(avatar_path):
-        print(f"Creating default avatar at {avatar_path}")
-        try:
-            # Создаем директорию, если её нет
-            os.makedirs(os.path.dirname(avatar_path), exist_ok=True)
-            
-            # Создаем простую заглушку аватара, если нужного файла нет
-            from PIL import Image, ImageDraw
-            
-            # Создаем изображение 200x200 пикселей
-            img = Image.new('RGB', (200, 200), color=(73, 109, 137))
-            d = ImageDraw.Draw(img)
-            d.ellipse((50, 50, 150, 150), fill=(255, 255, 255))
-            
-            # Сохраняем изображение
-            img.save(avatar_path)
-            print(f"Default avatar created at {avatar_path}")
-        except Exception as e:
-            print(f"Failed to create default avatar: {e}")
-            
-            # Если не удалось создать с помощью PIL, создаем пустой файл
-            try:
-                with open(avatar_path, 'wb') as f:
-                    # Пустое PNG изображение 1x1 пиксель
-                    f.write(b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n\x0b\xb8\x00\x00\x00\x00IEND\xaeB`\x82')
-                print(f"Empty default avatar created at {avatar_path}")
-            except:
-                print("Failed to create empty avatar file")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
