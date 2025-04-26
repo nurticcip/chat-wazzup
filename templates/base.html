@@ -3,12 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}WhatsApp Клон{% endblock %}</title>
+    <title>{% block title %}Chat App{% endblock %}</title>
+    
+    <!-- Раннее определение темы для предотвращения мигания -->
+    <script>
+        (function() {
+            // Проверяем тему в localStorage и сразу применяем её
+            if (localStorage.getItem('darkTheme') === 'true') {
+                document.documentElement.classList.add('dark-theme');
+            }
+        })();
+    </script>
+    
     {% block styles %}{% endblock %}
 </head>
 <body>
     {% block content %}{% endblock %}
-    
     {% block scripts %}{% endblock %}
 </body>
 </html>

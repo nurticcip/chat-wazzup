@@ -202,10 +202,11 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        initializeTheme(); // Initialize theme on page load
+        console.log('chat.html: DOM загружен');
         
         // Добавляем функцию для обновления аватара пользователя
         function updateUserAvatar() {
@@ -218,6 +219,45 @@
         
         // Обновляем аватар при загрузке страницы
         updateUserAvatar();
+        
+        // Проверка наличия необходимых изображений
+        const requiredImages = [
+            { path: "{{ url_for('static', filename='images/darkBack.jpg') }}", name: "darkBack.jpg", description: "фон темной темы" },
+            { path: "{{ url_for('static', filename='images/sun.png') }}", name: "sun.png", description: "иконка солнца" },
+            { path: "{{ url_for('static', filename='images/moon.png') }}", name: "moon.png", description: "иконка луны" }
+        ];
+        
+        requiredImages.forEach(image => {
+            const img = new Image();
+            img.onload = () => console.log(`Изображение ${image.name} найдено`);
+            img.onerror = () => {
+                console.error(`Файл ${image.name} не найден в директории /static/images/`);
+                alert(`Отсутствует ${image.description}. Положите ${image.name} в папку static/images/`);
+            };
+            img.src = image.path;
+        });
+        
+        // Обработка сообщений от iframe
+        window.addEventListener('message', function(event) {
+            if (event.data === 'themeChanged') {
+                console.log('Получено сообщение о смене темы');
+                
+                // Получаем текущее состояние темы
+                const isDarkTheme = document.body.classList.contains('dark-theme');
+                
+                // Передаем состояние темы всем iframe
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    iframe.contentWindow.postMessage({
+                        type: 'toggleTheme',
+                        isDarkTheme: isDarkTheme
+                    }, '*');
+                });
+            }
+            
+            // Другие обработчики сообщений
+            // ...existing code...
+        });
     });
 </script>
 {% endblock %}
