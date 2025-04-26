@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>Управление профилем</h1>
+        <a href="{{ url_for('chat') }}" class="back-button">← Вернуться к чату</a>
+    </div>
+    
+    <div class="profile-content">
+        <div class="profile-section photo-section">
+            <h2>Фото профиля</h2>
+            <div class="profile-photo-container">
+                <div class="profile-photo">
+                    <img src="{{ url_for('user_photo_redirect') }}" alt="Фото профиля" id="profilePhotoPreview">
+                    <div class="overlay">
+                        <span class="change-photo-text">Изменить</span>
+                    </div>
+                </div>
+                <input type="file" id="profilePhotoInput" accept="image/*" style="display:none">
+                <button id="savePhotoBtn" class="hidden">Сохранить фото</button>
+            </div>
+        </div>
+        
+        <div class="profile-section password-section">
+            <h2>Изменить пароль</h2>
+            <div class="password-form">
+                <div class="input-group">
+                    <input type="password" id="current-password" placeholder="Текущий пароль">
+                    <span class="material-icons toggle-password">visibility_off</span>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="new-password" placeholder="Новый пароль">
+                    <span class="material-icons toggle-password">visibility_off</span>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="confirm-password" placeholder="Подтвердите новый пароль">
+                    <span class="material-icons toggle-password">visibility_off</span>
+                </div>
+                <button id="savePasswordBtn">Сохранить пароль</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="profileError" class="message error hidden"></div>
+    <div id="profileSuccess" class="message success hidden"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat App{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/dist/index.js"
+    integrity="sha256-2O7uKle4H0lYBC5kYcI4Zab5xZ2c7j1gQjVvWACmW0=" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+<div class="app-container">
+    <div class="sidebar">
+        <div class="profile-section">
+            <div class="user-avatar">
+                <!-- Исправляем путь к фото пользователя: используем корректный endpoint -->
+                <img src="{{ url_for('user_photo_redirect') }}" alt="User Avatar">
+            </div>
+            <div class="user-info">
+                <h3>{{ username }}</h3>
+                <p class="user-email">{{ email }}</p>
+            </div>
+            <div class="menu-actions">
+                <div class="menu-dots" id="menu-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <div class="theme-toggle" id="theme-toggle">
+                    <img src="{{ url_for('static', filename='images/moon.png') }}" alt="Toggle Theme" class="theme-icon">
+                </div>
+                <div class="dropdown-menu" id="dropdown-menu">
+                    <ul>
+                        <li>Edit Profile</li>
+                        <li>Select Contact</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="search-section">
+            <div class="search-bar">
+                <img src="{{ url_for('static', filename='images/search.png') }}" alt="Search" class="search-icon">
+                <input type="text" id="search" placeholder="Search...">
+            </div>
+            <div class="search-actions">
+                <div class="action-icon" id="contacts-icon">
+                    <img src="{{ url_for('static', filename='images/contact-icon.png') }}" alt="Contacts" class="nav-icon">
+                </div>
+                <div class="action-icon" id="groups-icon">
+                    <img src="{{ url_for('static', filename='images/group-icon.png') }}" alt="Groups" class="nav-icon">
+                </div>
+            </div>
+        </div>
+        <div class="sidebar-content">
+            <div class="selection-actions" style="display: none;">
+                <button id="delete-selected" class="delete-button">Delete</button>
+                <button id="cancel-selection" class="cancel-button">Cancel</button>
+            </div>
+            <div class="section active" data-section="chats">
+                <div class="chats-list"></div>
+            </div>
+            <div class="section" data-section="contacts">
+                <div class="contacts-list"></div>
+            </div>
+            <div class="section" data-section="groups">
+                <div class="groups-list"></div>
+            </div>
+        </div>
+    </div>
+    <div class="main-content">
+        <div class="chat-container">
+            <div class="chat-app-logo">
+                <img src="{{ url_for('static', filename='images/chat.png') }}" alt="Chat App" class="chat-logo">
+                <h1>Chat App</h1>
+            </div>
+            <div class="chat-view" style="display: none;">
+                <div class="chat-header">
+                    <div class="chat-contact-info">
+                        <div class="contact-avatar">
+                            <img src="{{ url_for('static', filename='images/avatar.png') }}" alt="Contact Avatar" id="chat-contact-avatar">
+                        </div>
+                        <div class="contact-details">
+                            <h3 id="chat-contact-name">Contact Name</h3>
+                            <p id="chat-contact-status">Last seen recently</p>
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <img src="{{ url_for('static', filename='images/info.png') }}" alt="Info" class="action-icon info-icon" id="info-icon">
+                    </div>
+                </div>
+                <div class="chat-body" id="chat-body">
+                    <!-- Messages will be dynamically added here -->
+                </div>
+                <div class="reply-preview" id="reply-preview" style="display: none;">
+                    <div class="reply-content">
+                        <span class="reply-contact-name" id="reply-contact-name"></span>
+                        <p class="reply-text" id="reply-text"></p>
+                    </div>
+                    <button class="cancel-reply" id="cancel-reply">×</button>
+                </div>
+                <div class="edit-preview" id="edit-preview" style="display: none;">
+                    <div class="edit-content">
+                        <div class="edit-text" id="edit-text"></div>
+                    </div>
+                    <button class="cancel-edit" id="cancel-edit">×</button>
+                </div>
+                <div class="chat-input">
+                    <div class="input-actions">
+                        <div class="attach-icon" id="attach-icon">
+                            <img src="{{ url_for('static', filename='images/attach.png') }}" alt="Attach">
+                        </div>
+                        <input type="file" id="file-input" style="display: none;"
+                            accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                        <div class="emoji-icon" id="emoji-icon">
+                            <img src="{{ url_for('static', filename='images/emoji.png') }}" alt="Emoji">
+                        </div>
+                        <div class="emoji-picker-container" id="emoji-picker-container" style="display: none;">
+                            <emoji-picker></emoji-picker>
+                        </div>
+                        <div class="gif-sticker-icon" id="gif-sticker-icon">
+                            <img src="{{ url_for('static', filename='images/gif-sticker.png') }}" alt="GIF/Sticker">
+                        </div>
+                        <div class="gif-sticker-picker-container" id="gif-sticker-picker-container"
+                            style="display: none;">
+                            <div class="gif-sticker-tabs">
+                                <button class="tab-button active" data-tab="gif">GIFs</button>
+                                <button class="tab-button" data-tab="sticker">Stickers</button>
+                            </div>
+                            <div class="tab-content active" id="gif-tab">
+                                <div class="gif-grid">
+                                    <img class="gif-item"
+                                        src="https://media.giphy.com/media/3o7TKSjRrfIPjeiVyM/giphy.gif" alt="GIF">
+                                    <img class="gif-item"
+                                        src="https://media.giphy.com/media/xT9DPsnda5LJ5C5z5K/giphy.gif" alt="GIF">
+                                    <img class="gif-item"
+                                        src="https://media.giphy.com/media/26FPy3QZQqGtD3f20/giphy.gif" alt="GIF">
+                                </div>
+                            </div>
+                            <div class="tab-content" id="sticker-tab">
+                                <div class="sticker-grid">
+                                    <img class="sticker-item" src="{{ url_for('static', filename='images/sticker1.png') }}" alt="Sticker">
+                                    <img class="sticker-item" src="{{ url_for('static', filename='images/sticker2.png') }}" alt="Sticker">
+                                    <img class="sticker-item" src="{{ url_for('static', filename='images/sticker3.png') }}" alt="Sticker">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="text" id="message-input" placeholder="Type a message...">
+                    <button id="send-button">Send</button>
+                    <div class="copy-notification" id="copy-notification">Copied</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="right-panel" id="right-panel" style="display: none;">
+        <div class="panel-content">
+            <span class="close-panel" id="close-panel">×</span>
+            <div class="panel-header">
+                <h4 id="chat-contact-name-panel">Adina Tagaev</h4>
+            </div>
+            <div class="shared-section">
+                <div class="shared-header">
+                    <h4>Shared photos</h4>
+                    <img src="{{ url_for('static', filename='images/right.png') }}" alt="Toggle" class="toggle-icon" id="toggle-photos">
+                </div>
+                <div class="shared-items" id="shared-photos" style="display: none;"></div>
+            </div>
+            <div class="shared-section">
+                <div class="shared-header">
+                    <h4>Shared files</h4>
+                    <img src="{{ url_for('static', filename='images/right.png') }}" alt="Toggle" class="toggle-icon" id="toggle-files">
+                </div>
+                <div class="shared-items" id="shared-files" style="display: none;"></div>
+            </div>
+            <button id="block-user" class="block-button">Block user</button>
+        </div>
+        <div class="photo-modal" id="photo-modal" style="display: none;">
+            <span class="close-photo" id="close-photo">×</span>
+            <img src="" alt="Full Screen Photo" id="full-screen-photo">
+        </div>
+    </div>
+    <div class="media-preview-modal" id="media-preview-modal" style="display: none;">
+        <span class="close-media-preview" id="close-media-preview">×</span>
+        <img src="{{ url_for('static', filename='images/rightIcon.png') }}" alt="Previous" class="nav-arrow" id="prev-media" style="transform: rotate(180deg);">
+
+        <div class="media-preview-content">
+            <img src="" alt="Media Preview" id="media-preview-image">
+        </div>
+        <img src="{{ url_for('static', filename='images/rightIcon.png') }}" alt="Next" class="nav-arrow" id="next-media">
+    </div>
+    <div id="block-user-modal" class="block-user-modal" style="display: none;">
+        <div class="block-user-content">
+            <h3>Delete</h3>
+            <p>Are you sure?</p>
+            <div class="block-user-actions">
+                <button id="cancel-block">Cancel</button>
+                <button id="confirm-block">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeTheme(); // Initialize theme on page load
+        
+        // Добавляем функцию для обновления аватара пользователя
+        function updateUserAvatar() {
+            const userAvatar = document.querySelector('.user-avatar img');
+            if (userAvatar) {
+                // Добавляем случайный параметр для предотвращения кеширования
+                userAvatar.src = "{{ url_for('user_photo_redirect') }}?" + new Date().getTime();
+            }
+        }
+        
+        // Обновляем аватар при загрузке страницы
+        updateUserAvatar();
+    });
+</script>
+{% endblock %}
