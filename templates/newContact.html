@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Contact</title>
+    <link rel="stylesheet" href="styles/newContact.css">
+</head>
+
+<body>
+    <div class="modal-content">
+        <div class="header">
+            <button class="header-btn cancel-btn">Cancel</button>
+            <span class="header-title">New contact</span>
+            <button class="header-btn save-btn">Save</button>
+        </div>
+        <div class="form-container">
+            <input type="text" id="first-name" class="input-field" placeholder="First name">
+            <input type="text" id="last-name" class="input-field" placeholder="Last name">
+            <input type="email" id="email" class="input-field" placeholder="Email...">
+        </div>
+    </div>
+    <script src="js/newContact.js"></script>
+    <script>(function () { function c() { var b = a.contentDocument || a.contentWindow.document; if (b) { var d = b.createElement('script'); d.innerHTML = "window.__CF$cv$params={r:'934c7319aa61dd1e',t:'MTc0NTQwMTc1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);"; b.getElementsByTagName('head')[0].appendChild(d) } } if (document.body) { var a = document.createElement('iframe'); a.height = 1; a.width = 1; a.style.position = 'absolute'; a.style.top = 0; a.style.left = 0; a.style.border = 'none'; a.style.visibility = 'hidden'; document.body.appendChild(a); if ('loading' !== document.readyState) c(); else if (window.addEventListener) document.addEventListener('DOMContentLoaded', c); else { var e = document.onreadystatechange || function () { }; document.onreadystatechange = function (b) { e(b); 'loading' !== document.readyState && (document.onreadystatechange = e, c()) } } } })();</script>
+</body>
+
+</html>

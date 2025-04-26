@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Contacts</title>
+    <link rel="stylesheet" href="styles/chat.css">
+    <style>
+        .contact-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .contact-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .no-contacts {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="modal-content">
+        <div class="header">
+            <button class="header-btn cancel" onclick="closeModal()">Cancel</button>
+            <h2 class="header-title">Select Contacts</h2>
+            <button class="header-btn save" onclick="deleteSelected()">Delete</button>
+        </div>
+        <div class="contact-list" id="contact-list"></div>
+    </div>
+    <script>
+        // Load contacts when the modal is opened
+        window.addEventListener('load', function () {
+            const contacts = JSON.parse(localStorage.getItem('chatContacts') || '[]');
+            const contactList = document.getElementById('contact-list');
+            if (contacts.length === 0) {
+                contactList.innerHTML = '<div class="no-contacts">No contacts available</div>';
+                return;
+            }
+            contacts.forEach((contact, index) => {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'contact-item';
+                const fullName = `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
+                contactDiv.innerHTML = `
+                    <input type="checkbox" data-index="${index}">
+                    <div class="contact-avatar">
+                        <img src="${contact.photo || 'images/contact-icon.png'}" alt="${fullName}">
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">${fullName}</div>
+                    </div>
+                `;
+                contactList.appendChild(contactDiv);
+            });
+        });
+
+        // Close the modal
+        function closeModal() {
+            window.parent.postMessage('closeSelectContactModal', '*');
+        }
+
+        // Delete selected contacts
+        function deleteSelected() {
+            const checkboxes = document.querySelectorAll('#contact-list input[type="checkbox"]:checked');
+            const indices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
+            if (indices.length > 0) {
+                if (confirm(`Are you sure you want to delete ${indices.length} contact(s)?`)) {
+                    window.parent.postMessage({ type: 'deleteContacts', indices: indices }, '*');
+                    closeModal();
+                }
+            } else {
+                alert('Please select at least one contact to delete.');
+            }
+        }
+    </script>
+</body>
+
+</html>

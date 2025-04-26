@@ -160,6 +160,7 @@ def home():
         return redirect(url_for('chat'))
     return render_template('index.html')
 
+
 @app.route('/profile')
 def profile():
     # Проверяем, авторизован ли пользователь

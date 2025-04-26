@@ -1,58 +1,40 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
 
-{% block title %}Мой профиль{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="styles/profile.css">
+</head>
 
-{% block styles %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
-{% endblock %}
-
-{% block content %}
-<div class="profile-container">
-    <div class="profile-header">
-        <h1>Управление профилем</h1>
-        <a href="{{ url_for('chat') }}" class="back-button">← Вернуться к чату</a>
-    </div>
-    
-    <div class="profile-content">
-        <div class="profile-section photo-section">
-            <h2>Фото профиля</h2>
-            <div class="profile-photo-container">
-                <div class="profile-photo">
-                    <img src="{{ url_for('user_photo_redirect') }}" alt="Фото профиля" id="profilePhotoPreview">
-                    <div class="overlay">
-                        <span class="change-photo-text">Изменить</span>
-                    </div>
-                </div>
-                <input type="file" id="profilePhotoInput" accept="image/*" style="display:none">
-                <button id="savePhotoBtn" class="hidden">Сохранить фото</button>
-            </div>
+<body>
+    <div class="modal-content">
+        <div class="header">
+            <button class="header-btn cancel" id="cancel-btn">Cancel</button>
+            <h2 class="header-title">Edit Profile</h2>
+            <button class="header-btn save" id="save-btn">Save</button>
         </div>
-        
-        <div class="profile-section password-section">
-            <h2>Изменить пароль</h2>
-            <div class="password-form">
-                <div class="input-group">
-                    <input type="password" id="current-password" placeholder="Текущий пароль">
-                    <span class="material-icons toggle-password">visibility_off</span>
+        <div class="form-container">
+            <div class="avatar-section">
+                <div class="avatar-wrapper">
+                    <img src="images/avatar.png" class="avatar" id="avatar-img" alt="Avatar">
+                    <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+                    <button class="change-avatar" id="change-avatar-btn">
+                        <img src="images/camera.png" alt="Change Avatar" class="camera-icon">
+                    </button>
                 </div>
-                <div class="input-group">
-                    <input type="password" id="new-password" placeholder="Новый пароль">
-                    <span class="material-icons toggle-password">visibility_off</span>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="confirm-password" placeholder="Подтвердите новый пароль">
-                    <span class="material-icons toggle-password">visibility_off</span>
-                </div>
-                <button id="savePasswordBtn">Сохранить пароль</button>
+                <span class="avatar-text">Add photo</span>
+            </div>
+            <div class="profile-body">
+                <input type="text" class="profile-input" id="user-name" placeholder="User name...">
+                <input type="email" class="profile-input" id="email" placeholder="Email...">
+                <input type="password" class="profile-input" id="password" placeholder="Password...">
             </div>
         </div>
     </div>
-    
-    <div id="profileError" class="message error hidden"></div>
-    <div id="profileSuccess" class="message success hidden"></div>
-</div>
-{% endblock %}
+    <script src="js/profile.js"></script>
+    <script>(function () { function c() { var b = a.contentDocument || a.contentWindow.document; if (b) { var d = b.createElement('script'); d.innerHTML = "window.__CF$cv$params={r:'934c7319ad23b093',t:'MTc0NTQwMTc1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);"; b.getElementsByTagName('head')[0].appendChild(d) } } if (document.body) { var a = document.createElement('iframe'); a.height = 1; a.width = 1; a.style.position = 'absolute'; a.style.top = 0; a.style.left = 0; a.style.border = 'none'; a.style.visibility = 'hidden'; document.body.appendChild(a); if ('loading' !== document.readyState) c(); else if (window.addEventListener) document.addEventListener('DOMContentLoaded', c); else { var e = document.onreadystatechange || function () { }; document.onreadystatechange = function (b) { e(b); 'loading' !== document.readyState && (document.onreadystatechange = e, c()) } } } })();</script>
+</body>
 
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
-{% endblock %}
+</html>

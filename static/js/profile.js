@@ -1,260 +1,89 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // DOM элементы
-    const profilePhoto = document.querySelector('.profile-photo');
-    const profilePhotoInput = document.getElementById('profilePhotoInput');
-    const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-    const savePhotoBtn = document.getElementById('savePhotoBtn');
-    const savePasswordBtn = document.getElementById('savePasswordBtn');
-    const currentPasswordInput = document.getElementById('current-password');
-    const newPasswordInput = document.getElementById('new-password');
-    const confirmPasswordInput = document.getElementById('confirm-password');
-    const profileError = document.getElementById('profileError');
-    const profileSuccess = document.getElementById('profileSuccess');
-    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('Profile modal initialized');
 
-    // Загружаем текущее фото пользователя при загрузке страницы
-    function loadUserPhoto() {
-        // Добавляем случайный параметр для предотвращения кэширования
-        const timestamp = new Date().getTime();
-        if (profilePhotoPreview) {
-            profilePhotoPreview.src = `/api/user/photo?t=${timestamp}`;
-        }
+    setupEventListeners();
+
+    let isDarkTheme = localStorage.getItem('darkTheme') === 'true';
+    if (isDarkTheme) {
+        document.body.classList.add('dark-theme');
     }
-    
-    // Загружаем фото при инициализации
-    loadUserPhoto();
 
-    // Обработчик клика на фото профиля
-    if (profilePhoto) {
-        profilePhoto.addEventListener('click', function() {
-            // Анимация выделения при клике
-            profilePhoto.classList.add('photo-change-active');
-            
-            // Открываем диалог выбора файла
-            profilePhotoInput.click();
+    window.parent.postMessage({ type: 'requestUserData' }, '*');
+});
+
+function setupEventListeners() {
+    const cancelBtn = document.getElementById('cancel-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const avatarInput = document.getElementById('avatar-input');
+    const changeAvatarBtn = document.getElementById('change-avatar-btn');
+    const avatarImg = document.getElementById('avatar-img');
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function () {
+            window.parent.postMessage('closeProfileModal', '*');
         });
     }
 
-    // Обработчик выбора нового файла фото
-    if (profilePhotoInput) {
-        profilePhotoInput.addEventListener('change', function(e) {
-            if (this.files && this.files[0]) {
-                const file = this.files[0];
-                
-                // Проверка типа файла
-                if (!file.type.match('image.*')) {
-                    showError('Пожалуйста, выберите изображение');
-                    return;
-                }
-                
-                // Проверка размера файла (не более 5МБ)
-                if (file.size > 5 * 1024 * 1024) {
-                    showError('Размер файла не должен превышать 5МБ');
-                    return;
-                }
-                
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function () {
+            const nameInput = document.getElementById('user-name');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+
+            const userData = {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                password: passwordInput.value.trim(),
+                avatar: avatarImg.src
+            };
+
+            if (!userData.name || !userData.email) {
+                alert('Name and email are required!');
+                return;
+            }
+
+            localStorage.setItem('userProfile', JSON.stringify(userData));
+            window.parent.postMessage({ type: 'updateUserProfile', data: userData }, '*');
+            window.parent.postMessage('closeProfileModal', '*');
+        });
+    }
+
+    if (changeAvatarBtn && avatarInput) {
+        changeAvatarBtn.addEventListener('click', function () {
+            avatarInput.click();
+        });
+    }
+
+    if (avatarInput && avatarImg) {
+        avatarInput.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
                 const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    // Обновляем превью фото
-                    profilePhotoPreview.src = e.target.result;
-                    
-                    // Показываем кнопку сохранения
-                    savePhotoBtn.classList.remove('hidden');
-                    
-                    // Добавляем эффект свечения для привлечения внимания
-                    savePhotoBtn.classList.add('pulse');
+                reader.onload = function (e) {
+                    avatarImg.src = e.target.result;
                 };
-                
                 reader.readAsDataURL(file);
             }
         });
     }
 
-    // Обработчик сохранения нового фото
-    if (savePhotoBtn) {
-        savePhotoBtn.addEventListener('click', function() {
-            if (!profilePhotoInput.files || !profilePhotoInput.files[0]) {
-                showError('Пожалуйста, выберите файл');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('profile_photo', profilePhotoInput.files[0]);
-            
-            // Отключаем кнопку при отправке
-            savePhotoBtn.disabled = true;
-            savePhotoBtn.innerText = 'Сохранение...';
-            
-            fetch('/api/user/update-photo', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showSuccess('Фото профиля успешно обновлено');
-                    savePhotoBtn.classList.add('hidden');
-                    profilePhoto.classList.remove('photo-change-active');
-                    
-                    // Обновляем все изображения пользователя на странице
-                    const userImages = document.querySelectorAll('.user-avatar img');
-                    userImages.forEach(img => {
-                        img.src = `/api/user/photo?t=${data.timestamp || new Date().getTime()}`;
-                    });
-                } else {
-                    showError(data.message || 'Ошибка при обновлении фото');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showError('Произошла ошибка при обновлении фото');
-            })
-            .finally(() => {
-                savePhotoBtn.disabled = false;
-                savePhotoBtn.innerText = 'Сохранить фото';
-                savePhotoBtn.classList.remove('pulse');
-            });
-        });
-    }
+    window.addEventListener('message', function (event) {
+        console.log('Profile modal received message:', event.data);
 
-    // Обработчик сохранения нового пароля
-    savePasswordBtn.addEventListener('click', function() {
-        // Сбрасываем предыдущие ошибки
-        hideError();
-        
-        const currentPassword = currentPasswordInput.value;
-        const newPassword = newPasswordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
-        
-        // Валидация
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            showError('Пожалуйста, заполните все поля пароля');
-            return;
+        if (event.data && event.data.type === 'userData') {
+            const userData = event.data.data;
+            document.getElementById('user-name').value = userData.name || '';
+            document.getElementById('email').value = userData.email || '';
+            document.getElementById('avatar-img').src = userData.avatar || 'images/avatar.png';
         }
-        
-        if (newPassword !== confirmPassword) {
-            showError('Новые пароли не совпадают');
-            confirmPasswordInput.classList.add('shake');
-            setTimeout(() => {
-                confirmPasswordInput.classList.remove('shake');
-            }, 500);
-            return;
-        }
-        
-        if (newPassword.length < 6) {
-            showError('Новый пароль должен содержать не менее 6 символов');
-            return;
-        }
-        
-        // Отключаем кнопку при отправке
-        savePasswordBtn.disabled = true;
-        savePasswordBtn.innerText = 'Сохранение...';
-        
-        // Отправляем запрос на обновление пароля
-        fetch('/api/user/update-password', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                current_password: currentPassword,
-                new_password: newPassword
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccess('Пароль успешно обновлен');
-                // Очищаем поля
-                currentPasswordInput.value = '';
-                newPasswordInput.value = '';
-                confirmPasswordInput.value = '';
+
+        if (event.data && event.data.type === 'toggleTheme') {
+            const isDarkTheme = event.data.isDarkTheme;
+            if (isDarkTheme) {
+                document.body.classList.add('dark-theme');
             } else {
-                showError(data.message || 'Ошибка при обновлении пароля');
+                document.body.classList.remove('dark-theme');
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showError('Произошла ошибка при обновлении пароля');
-        })
-        .finally(() => {
-            savePasswordBtn.disabled = false;
-            savePasswordBtn.innerText = 'Сохранить пароль';
-        });
+        }
     });
-
-    // Обработчики для переключения видимости пароля
-    togglePasswordButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const input = this.previousElementSibling;
-            const type = input.getAttribute('type');
-            
-            if (type === 'password') {
-                input.setAttribute('type', 'text');
-                this.textContent = 'visibility';
-            } else {
-                input.setAttribute('type', 'password');
-                this.textContent = 'visibility_off';
-            }
-            
-            // Анимация кнопки
-            this.classList.add('shake');
-            setTimeout(() => {
-                this.classList.remove('shake');
-            }, 500);
-        });
-    });
-
-    // Функция для отображения ошибки
-    function showError(message) {
-        if (!profileError) return;
-        
-        profileError.textContent = message;
-        profileError.classList.remove('hidden');
-        
-        // Анимируем появление сообщения
-        profileError.style.opacity = '0';
-        setTimeout(() => {
-            profileError.style.opacity = '1';
-        }, 10);
-    }
-
-    // Функция для скрытия ошибки
-    function hideError() {
-        profileError.classList.add('hidden');
-        profileSuccess.classList.add('hidden');
-    }
-    
-    // Функция для отображения успешного сообщения
-    function showSuccess(message) {
-        profileSuccess.textContent = message;
-        profileSuccess.classList.remove('hidden');
-        
-        // Анимируем появление сообщения
-        profileSuccess.style.opacity = '0';
-        setTimeout(() => {
-            profileSuccess.style.opacity = '1';
-        }, 10);
-        
-        // Автоматически скрываем сообщение через 3 секунды
-        setTimeout(() => {
-            profileSuccess.style.opacity = '0';
-            setTimeout(() => {
-                profileSuccess.classList.add('hidden');
-            }, 300);
-        }, 3000);
-    }
-
-    // Добавляем эффект наведения для полей ввода
-    const inputs = document.querySelectorAll('input');
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('focused');
-        });
-        
-        input.addEventListener('blur', function() {
-            this.parentElement.classList.remove('focused');
-        });
-    });
-});
+}
